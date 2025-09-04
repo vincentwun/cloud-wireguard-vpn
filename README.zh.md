@@ -129,16 +129,16 @@ Azure 帳戶:
 
 `sudo nano /etc/sysctl.conf`
 
-**取消註解 net.ipv4.ip_forward=1**
+**取消註解**
 
-net.ipv4.ip_forward=1
+找到`#net.ipv4.ip_forward=1`, 修改成`net.ipv4.ip_forward=1`
 
 儲存檔案後，執行以下指令立即套用設定：
+
 `sudo sysctl -p`
 
 ### 產生 WireGuard 密鑰
 
-****
 ```
 mkdir wg_server wg_client
 umask 077
@@ -206,12 +206,14 @@ AllowedIPs = 10.0.0.11/32
 ```
 
 **啟動 WireGuard**
+
 `sudo wg-quick up wg0`
 
 **開機自動啟動 WireGuard**
+
 `sudo systemctl enable wg-quick@wg0`
 
-**複製以下輸出內容, 貼上在你的Client PC /etc/wireguard/wg0.conf**
+**在VM Server輸入以下內容後, 會輸出新的output自動完成 [Interface] 及 [Peer]的資料**
 
 ```
 echo "
@@ -233,6 +235,8 @@ AllowedIPs = 0.0.0.0/0
 PersistentKeepalive = 25
 "
 ```
+
+**複製新的輸出內容, 貼上在你的Client PC /etc/wireguard/wg0.conf 當中**
 
 </details>
 
