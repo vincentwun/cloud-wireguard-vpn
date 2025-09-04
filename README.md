@@ -129,9 +129,11 @@ AllowedIPs = 10.0.0.11/32
 ```
 
 **Start WireGuard**
+
 `sudo wg-quick up wg0`
 
 **Enable WireGuard to start on boot**
+
 `sudo systemctl enable wg-quick@wg0`
 
 **Copy the following output, and paste it into your Client PC's /etc/wireguard/wg0.conf**
@@ -169,16 +171,20 @@ PersistentKeepalive = 25
 
 `sudo nano /etc/wireguard/wg0.conf`
 
-Paste the output from the VM Server.
+Paste the output copied from the VM Server.
 
 **Start WireGuard**
+
 `sudo wg-quick up wg0`
 
 **Stop WireGuard**
+
 `sudo wg-quick down wg0`
 
 **Reboot the WireGuard:**
+
 `sudo wg-quick down wg0 && sudo wg-quick up wg0`
 
 **(Optional) Enable WireGuard to start on boot**
+
 `sudo systemctl enable wg-quick@wg0`

@@ -166,18 +166,22 @@ PersistentKeepalive = 25
 
 `sudo nano /etc/wireguard/wg0.conf`
 
-貼上在VM Server最後的輸出
+把從 VM Server 複製的內容貼上
 
 **啟動 WireGuard**
+
 `sudo wg-quick up wg0`
 
 **關閉 WireGuard**
+
 `sudo wg-quick down wg0`
 
 **Reboot the WireGuard:**
+
 `sudo wg-quick down wg0 && sudo wg-quick up wg0`
 
 **(可選) 設定開機自動啟動**
+
 `sudo systemctl enable wg-quick@wg0`
 
 ---
