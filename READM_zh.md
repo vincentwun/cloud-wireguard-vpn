@@ -24,47 +24,28 @@ Azure 帳戶:
 <details>
 <summary>建立 GCP VM</summary>
 
-1. 登入 Google Cloud Console 並建立一個新的Project
-2. 啟用 Compute Engine API
-3. 導覽至 Compute Engine > VM 執行個體，並建立一台新的虛擬機
+1. 登入 Google Cloud Console 並建立一個新的Project <YOUR_PROJECT_NAME>
+2. 開啟 GCP Cloud Shell
 
-| Instance Setting | 設定值 |
-|------|--------|
-| 名稱 | `gcp-wireguard-server` |
-| 區域 | `us-west1` 或你想部署的地方 |
-| 機型 | `e2-micro` 或你想部署的類型 |
+```
+PROJECT=<YOUR_PROJECT_NAME>
 
-| OS & Storage Setting | 設定值 |
-|------|--------|
-| Disk | `標準永久磁碟` |
-| Size | `30GB` |
-| Image | `Ubuntu 24.04 LTS` |
+# 啟用 Compute Engine API
+gcloud services enable compute.googleapis.com
 
-| Network Setting | 設定值 |
-|------|--------|
-| 允許 HTTP 流量 |☑️ |
-| 允許 HTTPS 流量 | ☑️ |
-| IP 轉送 | ☑️ |
-| 網路標記 | 加入新tag `wireguard-server` |
+# 建立一台新的虛擬機
+gcloud compute instances create gcp-wireguard-server \
+    --project=$PROJECT \
+    --zone=us-west1-a \
+    --machine-type=e2-micro \
+    --network-interface=network-tier=PREMIUM,stack-type=IPV4_ONLY,subnet=default \
+    --can-ip-forward \
+    --provisioning-model=STANDARD \
+    --tags=wireguard-server,http-server,https-server
 
-4. 完成所有設定後，點擊 `Create`
-
-## 設定 GCP 防火牆規則
-
-1. 在 GCP Console 搜尋欄輸入firewall > 建立防火牆規則
-
-### 允許 WireGuard 連線進入 (Ingress)
-
-| 欄位 | 設定值 |
-|------|--------|
-| 名稱 | `allow-wireguard-ingress` |
-| 方向 | Ingress |
-| 目標 | 指定 VM 標籤 `wireguard-server` |
-| 來源 IP | `0.0.0.0/0` 或你的固定 IP |
-| 協定/埠 | `UDP:51820` |
-| 動作 | Allow |
-
-2. 完成所有設定後，點擊 `Create`
+# 設定 GCP 防火牆規則
+gcloud compute --project=$PROJECT firewall-rules create allow-wireguard-ingress --description=allow-wireguard-ingress --direction=INGRESS --priority=1000 --network=default --action=ALLOW --rules=udp:51820 --source-ranges=0.0.0.0/0 --target-tags=wireguard-server
+```
 
 3. 之後在VM頁面按 `SSH` 使用瀏覽器進入GCP VM
 
@@ -75,42 +56,81 @@ Azure 帳戶:
 <details>
 <summary>建立 Azure VM</summary>
 
-1. 登入 Azure Portal 並建立一個新的Resource Group
-2. 在 Azure Portal 搜尋「虛擬機器」並點擊「建立」
-3. 導覽至 Compute Engine > VM 執行個體，並建立一台新的虛擬機
+1. 登入 Azure Portal
+2. 在 Azure Portal 打開 Cloud Shell
 
-| Basic | 設定值 |
-|------|--------|
-| Virtual machine name | `azure-wireguard-server` |
-| 區域 | `(US) West US` 或你想部署的地方 |
-| 機型 | `e2-micro` 或你想部署的類型 |
-| Security type | `標準` |
-| Image | `Ubuntu Server 24 LTS Gen2` |
-| VM architecture  | `x64` |
-| Size | `Standard_B2ats_v2` |
-| Authentication type | `SSH public key` |
+```
+# 建立資源群組
+az group create \
+  --name azure-wireguard-rg1 \
+  --location westus
 
-| Networking | 設定值 |
-|------|--------|
-| New Public IP Name | `azure-wireguard-ip` |
-| Routing preference | `Microsoft network` |
-| NIC network security group | `Advanced` |
+# 建立網路安全群組
+az network nsg create \
+  --resource-group azure-wireguard-rg1 \
+  --name azure-wireguard-nsg \
+  --location westus
 
-| Add New Inbound Security Rule for NSG | 設定值 |
-|------|--------|
-| Source | `Any` |
-| Source port ranges | `*` |
-| Destination | `*` |
-| Service | `Custom` |
-| Destination port ranges | `51820` |
-| Protocol | `UDP` |
-| Action | `Allow` |
-| Priority | `1010` |
-| Name | `AllowWireGuardInbound` |
+# 新增 WireGuard 入站安全規則
+az network nsg rule create \
+  --resource-group azure-wireguard-rg1 \
+  --nsg-name azure-wireguard-nsg \
+  --name AllowWireGuardInbound \
+  --priority 1010 \
+  --protocol Udp \
+  --access Allow \
+  --direction Inbound \
+  --source-address-prefixes '*' \
+  --source-port-ranges '*' \
+  --destination-address-prefixes '*' \
+  --destination-port-ranges 51820
 
-4. 完成所有設定後，點擊 `Create`
+# 建立虛擬機器
+az vm create \
+  --resource-group azure-wireguard-rg1 \
+  --name azure-wireguard-server \
+  --location westus \
+  --image Canonical:UbuntuServer:24_04-lts-gen2:latest \
+  --size Standard_B2ats_v2 \
+  --authentication-type ssh \
+  --generate-ssh-keys \
+  --public-ip-sku Standard \
+  --nsg-name az group create \
+  --name azure-wireguard-rg1 \
+  --location westus
 
-5. SSH to 你的Azure VM
+# 建立網路安全群組
+az network nsg create \
+  --resource-group azure-wireguard-rg1 \
+  --name azure-wireguard-nsg \
+  --location westus
+
+# 新增 WireGuard 入站安全規則
+az network nsg rule create \
+  --resource-group azure-wireguard-rg1 \
+  --nsg-name azure-wireguard-nsg \
+  --name AllowWireGuardInbound \
+  --priority 1010 \
+  --protocol Udp \
+  --access Allow \
+  --direction Inbound \
+  --source-address-prefixes '*' \
+  --source-port-ranges '*' \
+  --destination-address-prefixes '*' \
+  --destination-port-ranges 51820
+
+# 建立虛擬機器
+az vm create \
+  --resource-group azure-wireguard-rg1 \
+  --name azure-wireguard-server \
+  --image Canonical:ubuntu-24_04-lts:server:latest \
+  --admin-username azureuser \
+  --generate-ssh-keys \
+  --public-ip-sku Standard \
+  --nsg azure-wireguard-nsg
+```
+
+3. SSH to 你的Azure VM
 
 找到 azure-wireguard-server VM 頁面 > Connect > More ways to connect > Connect via Azure CLI > Check access > Connect
 

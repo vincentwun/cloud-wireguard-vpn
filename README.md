@@ -1,13 +1,13 @@
 # WireGuard VPN on Cloud Platform
 
-A simple and secure WireGuard VPN that allows you to create a private encrypted tunnel through a GCP or Azure VM for remote access or to protect your traffic.
+A simple, secure WireGuard VPN that allows you to create a private encrypted tunnel using a GCP or Azure VM for remote access or traffic protection.
 
 ---
 
 ## Resources
 
 Google Cloud Account:
-- [Google Cloud Free Tier](https://cloud.google.com/free/docs/free-cloud-features#compute)
+- [Google Cloud Free Tier](https://cloud.google.com/free/docs/free-cloud-features?hl=en#compute)
 
 Azure Account:
 - [Azure Free Account](https://azure.microsoft.com/en-us/pricing/purchase-options/azure-account?icid=azurefreeaccount#freeservices)
@@ -24,49 +24,30 @@ Dynamic DNS (DDNS):
 <details>
 <summary>Create GCP VM</summary>
 
-1. Log in to the Google Cloud Console and create a new Project.
-2. Enable the Compute Engine API.
-3. Navigate to Compute Engine > VM instances and create a new virtual machine.
+1. Log in to Google Cloud Console and create a new Project <YOUR_PROJECT_NAME>
+2. Open GCP Cloud Shell
 
-| Instance Setting | Value |
-|------|--------|
-| Name | `gcp-wireguard-server` |
-| Region | `us-west1` or your preferred location |
-| Machine type | `e2-micro` or your preferred type |
+```
+PROJECT=<YOUR_PROJECT_NAME>
 
-| OS & Storage Setting | Value |
-|------|--------|
-| Disk | `Standard persistent disk` |
-| Size | `30GB` |
-| Image | `Ubuntu 24.04 LTS` |
+# Enable Compute Engine API
+gcloud services enable compute.googleapis.com
 
-| Network Setting | Value |
-|------|--------|
-| Allow HTTP traffic |☑️ |
-| Allow HTTPS traffic | ☑️ |
-| IP forwarding | ☑️ |
-| Network tags | Add a new tag `wireguard-server` |
+# Create a new virtual machine
+gcloud compute instances create gcp-wireguard-server \
+    --project=$PROJECT \
+    --zone=us-west1-a \
+    --machine-type=e2-micro \
+    --network-interface=network-tier=PREMIUM,stack-type=IPV4_ONLY,subnet=default \
+    --can-ip-forward \
+    --provisioning-model=STANDARD \
+    --tags=wireguard-server,http-server,https-server
 
-4. After completing all settings, click `Create`.
+# Configure GCP firewall rules
+gcloud compute --project=$PROJECT firewall-rules create allow-wireguard-ingress --description=allow-wireguard-ingress --direction=INGRESS --priority=1000 --network=default --action=ALLOW --rules=udp:51820 --source-ranges=0.0.0.0/0 --target-tags=wireguard-server
+```
 
-## Set up GCP Firewall Rule
-
-1. In the GCP Console search bar, type `firewall` > Create firewall rule.
-
-### Allow WireGuard Ingress
-
-| Field | Value |
-|------|--------|
-| Name | `allow-wireguard-ingress` |
-| Direction of traffic | Ingress |
-| Target | Specified target tags `wireguard-server` |
-| Source IP ranges | `0.0.0.0/0` or your static IP |
-| Protocols and ports | `UDP:51820` |
-| Action on match | Allow |
-
-2. After completing all settings, click `Create`.
-
-3. Then, on the VM instances page, click `SSH` to access the GCP VM via the browser.
+3. On the VM page, click `SSH` to access the GCP VM via browser
 
 </details>
 
@@ -75,50 +56,58 @@ Dynamic DNS (DDNS):
 <details>
 <summary>Create Azure VM</summary>
 
-1. Log in to the Azure Portal and create a new Resource Group.
-2. In the Azure Portal, search for "Virtual machines" and click "Create".
-3. Navigate to Compute > Virtual machines and create a new virtual machine.
+1. Log in to Azure Portal
+2. Open Cloud Shell in Azure Portal
 
-| Basic | Value |
-|------|--------|
-| Virtual machine name | `azure-wireguard-server` |
-| Region | `(US) West US` or your preferred location |
-| Security type | `Standard` |
-| Image | `Ubuntu Server 24.04 LTS - Gen2` |
-| VM architecture | `x64` |
-| Size | `Standard_B2ats_v2` |
-| Authentication type | `SSH public key` |
+```
+# Create resource group
+az group create \
+  --name azure-wireguard-rg1 \
+  --location westus
 
-| Networking | Value |
-|------|--------|
-| New Public IP Name | `azure-wireguard-ip` |
-| Routing preference | `Microsoft network` |
-| NIC network security group | `Advanced` |
+# Create network security group
+az network nsg create \
+  --resource-group azure-wireguard-rg1 \
+  --name azure-wireguard-nsg \
+  --location westus
 
-| Add New Inbound Security Rule for NSG | Value |
-|------|--------|
-| Source | `Any` |
-| Source port ranges | `*` |
-| Destination | `Any` |
-| Service | `Custom` |
-| Destination port ranges | `51820` |
-| Protocol | `UDP` |
-| Action | `Allow` |
-| Priority | `1010` |
-| Name | `AllowWireGuardInbound` |
+# Add WireGuard inbound security rule
+az network nsg rule create \
+  --resource-group azure-wireguard-rg1 \
+  --nsg-name azure-wireguard-nsg \
+  --name AllowWireGuardInbound \
+  --priority 1010 \
+  --protocol Udp \
+  --access Allow \
+  --direction Inbound \
+  --source-address-prefixes '*' \
+  --source-port-ranges '*' \
+  --destination-address-prefixes '*' \
+  --destination-port-ranges 51820
 
-4. After completing all settings, click `Review + create`, then `Create`.
+# Create virtual machine
+az vm create \
+  --resource-group azure-wireguard-rg1 \
+  --name azure-wireguard-server \
+  --location westus \
+  --image Canonical:UbuntuServer:24_04-lts-gen2:latest \
+  --size Standard_B2ats_v2 \
+  --authentication-type ssh \
+  --generate-ssh-keys \
+  --public-ip-sku Standard \
+  --nsg azure-wireguard-nsg
+```
 
-5. SSH to your Azure VM.
+3. SSH to your Azure VM
 
-Find the `azure-wireguard-server` VM page > Connect > More ways to connect > Connect via Azure CLI > Check access > Connect.
+Navigate to the azure-wireguard-server VM page > Connect > More ways to connect > Connect via Azure CLI > Check access > Connect
 
 </details>
 
 ---
 
 <details>
-<summary>VM Server Configuration</summary>
+<summary>VM Server Setup</summary>
 
 ### Install WireGuard
 
@@ -128,11 +117,11 @@ Find the `azure-wireguard-server` VM page > Connect > More ways to connect > Con
 
 `sudo nano /etc/sysctl.conf`
 
-**Uncomment the line**
+**Uncomment**
 
-Find `#net.ipv4.ip_forward=1` and change it to `net.ipv4.ip_forward=1`.
+Find `#net.ipv4.ip_forward=1` and change it to `net.ipv4.ip_forward=1`
 
-After saving the file, run the following command to apply the settings immediately:
+Save the file and apply the settings immediately:
 
 `sudo sysctl -p`
 
@@ -152,9 +141,9 @@ CLIENT_PUBLIC_KEY=$(cat wg_client/client_publickey)
 SERVER_IP=$(curl ip.me)
 ```
 
-**Generate WireGuard Server Configuration File**
+**Generate WireGuard Server Configuration**
 
-GCP VMs typically use the `ens4` network interface. You can run the `ip a` command to confirm.
+GCP VMs typically use the ens4 network interface; confirm by running `ip a`.
 
 GCP VM:
 
@@ -180,7 +169,7 @@ AllowedIPs = 10.0.0.11/32
 
 ---
 
-Azure VMs typically use the `eth0` network interface. You can run the `ip a` command to confirm.
+Azure VMs typically use the eth0 network interface; confirm by running `ip a`.
 
 Azure VM:
 
@@ -208,11 +197,11 @@ AllowedIPs = 10.0.0.11/32
 
 `sudo wg-quick up wg0`
 
-**Enable WireGuard to start on boot**
+**Enable WireGuard on Boot**
 
 `sudo systemctl enable wg-quick@wg0`
 
-**Enter the following content on the VM Server, it will generate a new output that automatically completes the [Interface] and [Peer] data**
+**Run the following on the VM Server to generate output for [Interface] and [Peer]**
 
 ```
 echo "
@@ -235,14 +224,14 @@ PersistentKeepalive = 25
 "
 ```
 
-**Copy the new output and paste it into `/etc/wireguard/wg0.conf` on your Client PC.**
+**Copy the output and paste it into your Client PC's /etc/wireguard/wg0.conf**
 
 </details>
 
 ---
 
 <details>
-<summary>Client Ubuntu 24 Configuration</summary>
+<summary>Client Ubuntu 24 Setup</summary>
 
 ### Install WireGuard
 
@@ -262,11 +251,11 @@ Paste the content copied from the VM Server.
 
 `sudo wg-quick down wg0`
 
-**Reboot the WireGuard:**
+**Reboot WireGuard**
 
 `sudo wg-quick down wg0 && sudo wg-quick up wg0`
 
-**(Optional) Set WireGuard to start on boot**
+**(Optional) Enable WireGuard on Boot**
 
 `sudo systemctl enable wg-quick@wg0`
 
