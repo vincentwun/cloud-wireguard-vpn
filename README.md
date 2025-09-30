@@ -1,18 +1,25 @@
 # WireGuard VPN on Cloud Platform
 
-A simple, secure WireGuard VPN that allows you to create a private encrypted tunnel using a GCP or Azure VM for remote access or traffic protection.
+A simple and secure WireGuard VPN that lets you build a private encrypted tunnel with a GCP or Azure VM for remote access or traffic protection.
 
 ---
 
 ## Resources
 
-Google Cloud Account:
+Google Cloud:
 - [Google Cloud Free Tier](https://cloud.google.com/free/docs/free-cloud-features?hl=en#compute)
 
-Azure Account:
+- [gcloud CLI](https://cloud.google.com/sdk/docs/install)
+
+Azure:
 - [Azure Free Account](https://azure.microsoft.com/en-us/pricing/purchase-options/azure-account?icid=azurefreeaccount#freeservices)
 
-Network Latency Test Tool:
+- [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli-linux?view=azure-cli-latest&pivots=apt)
+
+Terraform:
+- [Install Terraform](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
+
+Network latency test:
 - [Cloud Providers Ping Test](https://cloudpingtest.com/)
 
 Dynamic DNS (DDNS):
@@ -21,227 +28,105 @@ Dynamic DNS (DDNS):
 
 ---
 
-<details>
-<summary>Create GCP VM</summary>
+## Provision an Azure WireGuard Server
 
-1. Log in to Google Cloud Console and create a new Project <YOUR_PROJECT_NAME>
-2. Open GCP Cloud Shell
+1. Change into the Azure directory:
 
-```
-PROJECT=<YOUR_PROJECT_NAME>
-
-# Enable Compute Engine API
-gcloud services enable compute.googleapis.com
-
-# Create a new virtual machine
-gcloud compute instances create gcp-wireguard-server \
-    --project=$PROJECT \
-    --zone=us-west1-a \
-    --machine-type=e2-micro \
-    --network-interface=network-tier=PREMIUM,stack-type=IPV4_ONLY,subnet=default \
-    --can-ip-forward \
-    --provisioning-model=STANDARD \
-    --tags=wireguard-server,http-server,https-server
-
-# Configure GCP firewall rules
-gcloud compute --project=$PROJECT firewall-rules create allow-wireguard-ingress --description=allow-wireguard-ingress --direction=INGRESS --priority=1000 --network=default --action=ALLOW --rules=udp:51820 --source-ranges=0.0.0.0/0 --target-tags=wireguard-server
+```bash
+cd azure
 ```
 
-3. On the VM page, click `SSH` to access the GCP VM via browser
+2. Sign in to Azure:
 
-</details>
-
----
-
-<details>
-<summary>Create Azure VM</summary>
-
-1. Log in to Azure Portal
-2. Open Cloud Shell in Azure Portal
-
-```
-# Create resource group
-az group create \
-  --name azure-wireguard-rg1 \
-  --location westus
-
-# Create network security group
-az network nsg create \
-  --resource-group azure-wireguard-rg1 \
-  --name azure-wireguard-nsg \
-  --location westus
-
-# Add WireGuard inbound security rule
-az network nsg rule create \
-  --resource-group azure-wireguard-rg1 \
-  --nsg-name azure-wireguard-nsg \
-  --name AllowWireGuardInbound \
-  --priority 1010 \
-  --protocol Udp \
-  --access Allow \
-  --direction Inbound \
-  --source-address-prefixes '*' \
-  --source-port-ranges '*' \
-  --destination-address-prefixes '*' \
-  --destination-port-ranges 51820
-
-# Create virtual machine
-az vm create \
-  --resource-group azure-wireguard-rg1 \
-  --name azure-wireguard-server \
-  --location westus \
-  --image Canonical:UbuntuServer:24_04-lts-gen2:latest \
-  --size Standard_B2ats_v2 \
-  --authentication-type ssh \
-  --generate-ssh-keys \
-  --public-ip-sku Standard \
-  --nsg azure-wireguard-nsg
+```bash
+az login
 ```
 
-3. SSH to your Azure VM
+3. Run the Terraform deployment:
 
-Navigate to the azure-wireguard-server VM page > Connect > More ways to connect > Connect via Azure CLI > Check access > Connect
-
-</details>
-
----
-
-<details>
-<summary>VM Server Setup</summary>
-
-### Install WireGuard
-
-`sudo apt update -y && sudo apt install wireguard -y`
-
-### Enable IP Forwarding
-
-`sudo nano /etc/sysctl.conf`
-
-**Uncomment**
-
-Find `#net.ipv4.ip_forward=1` and change it to `net.ipv4.ip_forward=1`
-
-Save the file and apply the settings immediately:
-
-`sudo sysctl -p`
-
-### Generate WireGuard Keys
-
-```
-mkdir wg_server wg_client
-umask 077
-
-wg genkey | tee wg_server/server_privatekey | wg pubkey > wg_server/server_publickey
-wg genkey | tee wg_client/client_privatekey | wg pubkey > wg_client/client_publickey
-
-SERVER_PRIVATE_KEY=$(cat wg_server/server_privatekey)
-SERVER_PUBLIC_KEY=$(cat wg_server/server_publickey)
-CLIENT_PRIVATE_KEY=$(cat wg_client/client_privatekey)
-CLIENT_PUBLIC_KEY=$(cat wg_client/client_publickey)
-SERVER_IP=$(curl ip.me)
+```bash
+terraform init
+terraform plan
+terraform apply
 ```
 
-**Generate WireGuard Server Configuration**
+4. SSH into the server:
 
-GCP VMs typically use the ens4 network interface; confirm by running `ip a`.
-
-GCP VM:
-
-```
-echo "
-[Interface]
-# Your Server Private Key
-PrivateKey = $SERVER_PRIVATE_KEY
-MTU = 1460
-Address = 10.0.0.1/24
-ListenPort = 51820
-SaveConfig = true
-PostUp = iptables -A FORWARD -i wg0 -j ACCEPT; iptables -t nat -A POSTROUTING -o ens4 -j MASQUERADE; ip6tables -A FORWARD -i wg0 -j ACCEPT; ip6tables -t nat -A POSTROUTING -o ens4 -j MASQUERADE
-PostDown = iptables -D FORWARD -i wg0 -j ACCEPT; iptables -t nat -D POSTROUTING -o ens4 -j MASQUERADE; ip6tables -D FORWARD -i wg0 -j ACCEPT; ip6tables -t nat -D POSTROUTING -o ens4 -j MASQUERADE
-
-# --- Client Peer ---
-[Peer]
-# Your Client Public Key
-PublicKey = $CLIENT_PUBLIC_KEY
-AllowedIPs = 10.0.0.11/32
-"  | sudo tee /etc/wireguard/wg0.conf > /dev/null
+```bash
+terraform output -raw ssh_private_key > wireguard-ssh-key
+chmod 400 wireguard-ssh-key
+ssh -i wireguard-ssh-key ubuntu@$(terraform output -raw server_public_ipv4)
 ```
 
 ---
 
-Azure VMs typically use the eth0 network interface; confirm by running `ip a`.
+## Provision a GCP WireGuard Server
 
-Azure VM:
+1. Change into the GCP directory:
 
-```
-echo "
-[Interface]
-# Your Server Private Key
-PrivateKey = $SERVER_PRIVATE_KEY
-MTU = 1460
-Address = 10.0.0.1/24
-ListenPort = 51820
-SaveConfig = true
-PostUp = iptables -A FORWARD -i wg0 -j ACCEPT; iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE; ip6tables -A FORWARD -i wg0 -j ACCEPT; ip6tables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
-PostDown = iptables -D FORWARD -i wg0 -j ACCEPT; iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE; ip6tables -D FORWARD -i wg0 -j ACCEPT; ip6tables -t nat -D POSTROUTING -o eth0 -j MASQUERADE
-
-# --- Client Peer ---
-[Peer]
-# Your Client Public Key
-PublicKey = $CLIENT_PUBLIC_KEY
-AllowedIPs = 10.0.0.11/32
-"  | sudo tee /etc/wireguard/wg0.conf > /dev/null
+```bash
+cd gcp
 ```
 
-**Start WireGuard**
+2. Sign in to Google Cloud:
 
-`sudo wg-quick up wg0`
-
-**Enable WireGuard on Boot**
-
-`sudo systemctl enable wg-quick@wg0`
-
-**Run the following on the VM Server to generate output for [Interface] and [Peer]**
-
-```
-echo "
-[Interface]
-# Your Client Private Key
-PrivateKey = $CLIENT_PRIVATE_KEY
-MTU = 1460
-Address = 10.0.0.11/24
-DNS = 1.1.1.1, 1.0.0.1
-SaveConfig = true
-
-# --- Server Peer ---
-[Peer]
-# Your Server Public Key
-PublicKey = $SERVER_PUBLIC_KEY
-# Your Server IP or DDNS
-Endpoint = $SERVER_IP:51820
-AllowedIPs = 0.0.0.0/0
-PersistentKeepalive = 25
-"
+```bash
+gcloud auth application-default login
 ```
 
-**Copy the output and paste it into your Client PC's /etc/wireguard/wg0.conf**
+3. Set the project ID:
 
-</details>
+```bash
+PROJECT_ID=wireguard-server
+export TF_VAR_project_id=$PROJECT_ID
+```
+
+4. Configure billing:
+
+```bash
+gcloud beta billing accounts list
+Billing_Account_ID=<your billing account ID>
+
+```
+5. Prepare the project:
+
+```bash
+gcloud projects create $PROJECT_ID --name=$PROJECT_ID --set-as-default
+gcloud beta billing projects link $PROJECT_ID --billing-account=$Billing_Account_ID
+gcloud config set project $PROJECT_ID
+gcloud auth application-default set-quota-project $PROJECT_ID
+gcloud services enable cloudresourcemanager.googleapis.com compute.googleapis.com --project=$PROJECT_ID
+```
+
+6. Run the Terraform deployment:
+
+```bash
+terraform init
+terraform plan -var="project_id=${PROJECT_ID}"
+terraform apply -auto-approve -var="project_id=${PROJECT_ID}"
+```
+
+7. SSH into the server:
+
+```bash
+terraform output -raw ssh_private_key > wireguard-ssh-key
+chmod 400 wireguard-ssh-key
+ssh -i wireguard-ssh-key ubuntu@$(terraform output -raw server_public_ipv4)
+```
 
 ---
 
-<details>
-<summary>Client Ubuntu 24 Setup</summary>
+## Client Setup on Ubuntu 24
 
 ### Install WireGuard
 
 `sudo apt update && sudo apt install wireguard -y`
 
-### Configure WireGuard (Client: wg0.conf)
+### Configure WireGuard (`wg0.conf`)
 
 `sudo nano /etc/wireguard/wg0.conf`
 
-Paste the content copied from the VM Server.
+Paste the configuration copied from the VM server.
 
 **Start WireGuard**
 
@@ -255,8 +140,6 @@ Paste the content copied from the VM Server.
 
 `sudo wg-quick down wg0 && sudo wg-quick up wg0`
 
-**(Optional) Enable WireGuard on Boot**
+**(Optional) Enable WireGuard at boot**
 
 `sudo systemctl enable wg-quick@wg0`
-
-</details>
