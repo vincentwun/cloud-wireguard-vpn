@@ -1,11 +1,3 @@
-# Create a resource group
-resource "azurerm_resource_group" "wireguard" {
-  name     = var.resource_group_name
-  location = var.location
-
-  tags = var.tags
-}
-
 # Create a VNet
 resource "azurerm_virtual_network" "wireguard" {
   name                = "vnet-wireguard"

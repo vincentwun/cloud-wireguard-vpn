@@ -1,4 +1,4 @@
-# Compute instance
+# Compute Instance
 resource "google_compute_instance" "wireguard" {
   name         = "wireguard-vpn"
   machine_type = var.machine_type

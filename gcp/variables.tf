@@ -1,4 +1,3 @@
-# variables.tf
 variable "project_id" {
   description = "GCP Project ID"
   type        = string
@@ -23,29 +22,29 @@ variable "machine_type" {
 }
 
 variable "image" {
-  description = "OS project and family "
+  description = "OS image"
   default     = "ubuntu-os-cloud/ubuntu-minimal-2404-lts-amd64"
 }
 
 variable "client_count" {
-  description = "Number of WireGuard clients to create"
+  description = "Number of WireGuard clients"
   type        = number
   default     = 1
 }
 
 variable "gcp_subnetwork_cidr" {
-  description = "IPv4 CIDR for GCP subnetwork where instance will be hosted"
+  description = "GCP subnetwork IPv4 CIDR"
   default     = "10.0.0.0/24"
 }
 
 variable "vpn_ipv4_cidr" {
-  description = "IPv4 CIDR for WireGuard VPN"
+  description = "WireGuard VPN IPv4 CIDR"
   type        = string
   default     = "10.10.0.0/24"
 }
 
 variable "vpn_ipv6_cidr" {
-  description = "IPv6 CIDR for WireGuard VPN"
+  description = "WireGuard VPN IPv6 CIDR"
   type        = string
   default     = "fd00:10:10::/64"
 }
@@ -56,7 +55,6 @@ variable "use_ipv6_endpoint" {
 }
 
 variable "interface" {
-  description = "Default network interface on the instance"
+  description = "Default network interface"
   default     = "ens4"
 }
-
