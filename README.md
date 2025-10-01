@@ -85,8 +85,9 @@ export TF_VAR_project_id=$PROJECT_ID
 
 ```bash
 gcloud beta billing accounts list
+```
+```bash
 Billing_Account_ID=<your billing account ID>
-
 ```
 5. Prepare the project:
 
@@ -132,7 +133,7 @@ sudo nano /etc/wireguard/wg0.conf
 
 Paste the configuration copied from the VM server.
 
-3. Start WireGuard**
+3. Start WireGuard
 
 ```bash
 sudo wg-quick up wg0
