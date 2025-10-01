@@ -131,23 +131,23 @@ sudo apt update && sudo apt install wireguard -y
 sudo nano /etc/wireguard/wg0.conf
 ```
 
-Paste the configuration copied from the VM server.
+3. Paste the configuration copied from the VM server.
 
-3. Start WireGuard
+4. Start WireGuard
 
 ```bash
 sudo wg-quick up wg0
 ```
 
-4. Other command
+5. Other commands
 
 ```bash
 # Stop WireGuard
-sudo wg-quick down wg0`
+sudo wg-quick down wg0
 
 # Reboot WireGuard
 sudo wg-quick down wg0 && sudo wg-quick up wg0
 
-# (Optional) Enable WireGuard at boot
+# Enable WireGuard at boot
 sudo systemctl enable wg-quick@wg0
 ```
