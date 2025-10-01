@@ -33,20 +33,3 @@ resource "azurerm_linux_virtual_machine" "wireguard" {
 
   tags = var.tags
 }
-
-# Get server public IP address
-resource "local_sensitive_file" "client_configs" {
-  count = var.client_count
-
-  content = templatefile("${path.module}/client-config.tpl", {
-    client_private_key  = local.client_configs[count.index].private_key
-    client_ipv4_address = local.client_configs[count.index].ipv4_address
-    client_ipv6_address = local.client_configs[count.index].ipv6_address
-    server_public_key   = wireguard_asymmetric_key.server.public_key
-    server_public_ip    = local.server_endpoint
-    dns_servers         = join(", ", var.dns_servers)
-  })
-
-  filename        = format("%s/client-configs/client%02d.conf", path.module, count.index + 1)
-  file_permission = "0600"
-}
