@@ -1,5 +1,4 @@
-# outputs.tf
-
+# Get server public IP addresses
 locals {
   ipv6_address = google_compute_instance.wireguard.network_interface[0].ipv6_access_config[0].external_ipv6
   ipv4_address = google_compute_instance.wireguard.network_interface[0].access_config[0].nat_ip

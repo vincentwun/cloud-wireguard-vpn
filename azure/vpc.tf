@@ -1,3 +1,4 @@
+# Create a resource group
 resource "azurerm_resource_group" "wireguard" {
   name     = var.resource_group_name
   location = var.location
@@ -5,6 +6,7 @@ resource "azurerm_resource_group" "wireguard" {
   tags = var.tags
 }
 
+# Create a VNet
 resource "azurerm_virtual_network" "wireguard" {
   name                = "vnet-wireguard"
   location            = azurerm_resource_group.wireguard.location
@@ -14,6 +16,7 @@ resource "azurerm_virtual_network" "wireguard" {
   tags = var.tags
 }
 
+# Create a subnet
 resource "azurerm_subnet" "wireguard" {
   name                 = "snet-wireguard"
   resource_group_name  = azurerm_resource_group.wireguard.name
@@ -21,6 +24,7 @@ resource "azurerm_subnet" "wireguard" {
   address_prefixes     = var.subnet_address_prefixes
 }
 
+# Create a Static IP
 resource "azurerm_public_ip" "wireguard" {
   name                = "pip-wireguard"
   resource_group_name = azurerm_resource_group.wireguard.name
@@ -31,6 +35,7 @@ resource "azurerm_public_ip" "wireguard" {
   tags = var.tags
 }
 
+# Create a Network Security Group
 resource "azurerm_network_security_group" "wireguard" {
   name                = "nsg-wireguard"
   location            = azurerm_resource_group.wireguard.location
@@ -75,6 +80,7 @@ resource "azurerm_network_security_group" "wireguard" {
   tags = var.tags
 }
 
+# Create a Network Interface
 resource "azurerm_network_interface" "wireguard" {
   name                = "nic-wireguard"
   location            = azurerm_resource_group.wireguard.location
@@ -90,6 +96,7 @@ resource "azurerm_network_interface" "wireguard" {
   tags = var.tags
 }
 
+# Associate NSG with NIC
 resource "azurerm_network_interface_security_group_association" "wireguard" {
   network_interface_id      = azurerm_network_interface.wireguard.id
   network_security_group_id = azurerm_network_security_group.wireguard.id

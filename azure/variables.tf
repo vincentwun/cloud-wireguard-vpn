@@ -1,77 +1,77 @@
 variable "resource_group_name" {
-  description = "Name of the Azure resource group to create or reuse."
+  description = "Azure resource group name"
   type        = string
   default     = "azure-wireguard-rg1"
 }
 
 variable "location" {
-  description = "Azure region where resources will be deployed."
+  description = "Azure region"
   type        = string
   default     = "westus"
 }
 
 variable "vnet_address_space" {
-  description = "Address spaces assigned to the Virtual Network."
+  description = "VNet address spaces"
   type        = list(string)
   default     = ["10.0.0.0/16"]
 }
 
 variable "subnet_address_prefixes" {
-  description = "Address prefixes for the subnet hosting the WireGuard VM."
+  description = "Subnet address prefixes"
   type        = list(string)
   default     = ["10.0.1.0/24"]
 }
 
 variable "vm_name" {
-  description = "Name of the WireGuard virtual machine."
+  description = "WireGuard VM name"
   type        = string
   default     = "azure-wireguard-server"
 }
 
 variable "vm_size" {
-  description = "Azure VM size to use for the WireGuard server."
+  description = "Azure VM size"
   type        = string
   default     = "Standard_B2ats_v2"
 }
 
 variable "admin_username" {
-  description = "Admin username configured on the WireGuard VM."
+  description = "VM admin username"
   type        = string
   default     = "azureuser"
 }
 
 variable "client_count" {
-  description = "Number of WireGuard clients to provision."
+  description = "Number of WireGuard clients"
   type        = number
   default     = 1
 }
 
 variable "vpn_ipv4_cidr" {
-  description = "IPv4 CIDR block used by the WireGuard tunnel network."
+  description = "WireGuard tunnel IPv4 CIDR"
   type        = string
   default     = "10.10.0.0/24"
 }
 
 variable "vpn_ipv6_cidr" {
-  description = "IPv6 CIDR block used by the WireGuard tunnel network."
+  description = "WireGuard tunnel IPv6 CIDR"
   type        = string
   default     = "fd00:10:10::/64"
 }
 
 variable "vpn_port" {
-  description = "UDP port exposed for WireGuard traffic."
+  description = "WireGuard UDP port"
   type        = number
   default     = 51820
 }
 
 variable "dns_servers" {
-  description = "DNS resolvers pushed to WireGuard clients."
+  description = "DNS servers for clients"
   type        = list(string)
   default     = ["1.1.1.1", "2606:4700:4700::1111"]
 }
 
 variable "use_ipv6_endpoint" {
-  description = "Whether to expose the server endpoint using IPv6. Azure setup currently supports IPv4 only."
+  description = "Use IPv6 endpoint (Azure supports IPv4 only)"
   type        = bool
   default     = false
 
@@ -82,13 +82,13 @@ variable "use_ipv6_endpoint" {
 }
 
 variable "interface" {
-  description = "Primary network interface name on the WireGuard VM used for egress firewall rules."
+  description = "Primary network interface name"
   type        = string
   default     = "eth0"
 }
 
 variable "tags" {
-  description = "Optional tags applied to Azure resources."
+  description = "Azure resource tags"
   type        = map(string)
   default     = {}
 }
