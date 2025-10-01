@@ -103,7 +103,7 @@ gcloud services enable cloudresourcemanager.googleapis.com compute.googleapis.co
 ```bash
 terraform init
 terraform plan -var="project_id=${PROJECT_ID}"
-terraform apply -auto-approve -var="project_id=${PROJECT_ID}"
+terraform apply -var="project_id=${PROJECT_ID}"
 ```
 
 7. SSH into the server:
@@ -116,30 +116,37 @@ ssh -i wireguard-ssh-key ubuntu@$(terraform output -raw server_public_ipv4)
 
 ---
 
-## Client Setup on Ubuntu 24
+## Client Ubuntu 24 Setup
 
-### Install WireGuard
+1. Install WireGuard
 
-`sudo apt update && sudo apt install wireguard -y`
+```bash
+sudo apt update && sudo apt install wireguard -y
+```
 
-### Configure WireGuard (`wg0.conf`)
+2. Configure WireGuard (`wg0.conf`)
 
-`sudo nano /etc/wireguard/wg0.conf`
+```bash
+sudo nano /etc/wireguard/wg0.conf
+```
 
 Paste the configuration copied from the VM server.
 
-**Start WireGuard**
+3. Start WireGuard**
 
-`sudo wg-quick up wg0`
+```bash
+sudo wg-quick up wg0
+```
 
-**Stop WireGuard**
+4. Other command
 
-`sudo wg-quick down wg0`
+```bash
+# Stop WireGuard
+sudo wg-quick down wg0`
 
-**Reboot WireGuard**
+# Reboot WireGuard
+sudo wg-quick down wg0 && sudo wg-quick up wg0
 
-`sudo wg-quick down wg0 && sudo wg-quick up wg0`
-
-**(Optional) Enable WireGuard at boot**
-
-`sudo systemctl enable wg-quick@wg0`
+# (Optional) Enable WireGuard at boot
+sudo systemctl enable wg-quick@wg0
+```
