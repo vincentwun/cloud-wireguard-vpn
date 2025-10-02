@@ -63,7 +63,7 @@ locals {
       ipv6_address  = cidrhost(var.vpn_ipv6_cidr, idx + 2)
       private_key   = wireguard_asymmetric_key.clients[idx].private_key
       public_key    = wireguard_asymmetric_key.clients[idx].public_key
-      preshared_key = wireguard_preshared_key.clients[idx].preshared_key
+      preshared_key = wireguard_preshared_key.clients[idx].key
     }
   ]
 
@@ -96,6 +96,7 @@ resource "local_sensitive_file" "client_configs" {
     client_ipv4_address = local.client_configs[count.index].ipv4_address
     client_ipv6_address = local.client_configs[count.index].ipv6_address
     server_public_key   = wireguard_asymmetric_key.server.public_key
+    preshared_key       = local.client_configs[count.index].preshared_key
     server_public_ip    = local.server_endpoint
     dns_servers         = join(", ", var.dns_servers)
   })

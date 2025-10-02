@@ -20,5 +20,5 @@ output "client_config_files" {
 # Convenience SSH command
 output "ssh_command" {
   description = "Convenience SSH command for connecting to the WireGuard VM."
-  value       = format("ssh -i <path-to-private-key> %s@%s", var.admin_username, azurerm_public_ip.wireguard.ip_address)
+  value       = format("ssh -i /path/to/private_key %s@%s", var.admin_username, azurerm_public_ip.wireguard.ip_address)
 }

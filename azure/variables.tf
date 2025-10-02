@@ -7,7 +7,7 @@ variable "resource_group_name" {
 variable "location" {
   description = "Azure region"
   type        = string
-  default     = "westus"
+  default     = "uksouth"
 }
 
 variable "vnet_address_space" {
