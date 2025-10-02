@@ -51,7 +51,7 @@ variable "vpn_ipv6_cidr" {
 
 variable "use_ipv6_endpoint" {
   description = "Use IPv6 endpoint in client config, otherwise use IPv4"
-  default     = true
+  default     = false
 }
 
 variable "interface" {

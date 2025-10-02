@@ -48,10 +48,16 @@ sudo systemctl enable wg-quick@wg0
 sudo wg show wg0
 ```
 
-5. To stop the tunnel:
+5. Stop or reboot tunnel:
 
 ```bash
+# Stop
 sudo wg-quick down wg0
+```
+
+```bash
+# Reboot
+sudo wg-quick down wg0 && sudo wg-quick up wg0
 ```
 
 ## (Optional) SSH To Server

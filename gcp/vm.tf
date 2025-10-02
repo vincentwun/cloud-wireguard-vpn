@@ -15,7 +15,7 @@ resource "google_compute_instance" "wireguard" {
     subnetwork = google_compute_subnetwork.vpn_subnet.id
     access_config {}
     ipv6_access_config {
-      network_tier = "STANDARD"
+      network_tier = "PREMIUM"
     }
   }
 

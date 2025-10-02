@@ -13,7 +13,7 @@ Simple WireGuard VPN examples for Azure and GCP. Each cloud folder has Terraform
 
 - [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli-linux?view=azure-cli-latest&pivots=apt)
 
-- [Install Terraform](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
+- [Terraform](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
 
 # Resources
 
