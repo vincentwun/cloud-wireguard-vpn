@@ -1,6 +1,7 @@
 variable "project_id" {
   description = "GCP Project ID"
   type        = string
+  default     = "wireguard-vpn-2025"
 }
 
 variable "region" {

@@ -8,8 +8,7 @@ This folder has Terraform to create a GCP VM running WireGuard and generate clie
 gcloud auth login --update-adc
 ```
 ```bash
-PROJECT_ID=wireguard-server-2025
-export TF_VAR_project_id=$PROJECT_ID
+PROJECT_ID=wireguard-vpn-2025
 ```
 ```bash
 gcloud beta billing accounts list
