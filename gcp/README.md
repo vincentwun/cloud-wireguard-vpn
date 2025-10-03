@@ -28,8 +28,8 @@ gcloud services enable compute.googleapis.com --project=$PROJECT_ID
 
 ```bash
 terraform init
-terraform plan -var="project_id=${PROJECT_ID}"
-terraform apply -var="project_id=${PROJECT_ID}"
+terraform plan
+terraform apply
 ```
 
 ## Client (Ubuntu) setup
