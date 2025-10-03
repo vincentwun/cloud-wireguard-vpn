@@ -1,22 +1,48 @@
-# WireGuard VPN on Cloud Platform
+ # Cloud-WireGuard-VPN
 
-Simple WireGuard VPN examples for Azure and GCP. Each cloud folder has Terraform code to create a VM, keys, and client configs.
+ A simple, reusable Terraform-based solution to deploy WireGuard VPN servers on Azure and GCP. This repository provides:
+ - Infrastructure as code for cloud VPN servers
+ - Automated client configuration templates
+ - Step-by-step deployment guides
 
-# Quick links
+ ---
+ ## Prerequisites
 
-- [Azure](./azure)
-- [GCP](./gcp)
-
-# Requirements
-
-- [gcloud CLI](https://cloud.google.com/sdk/docs/install)
-
+- [Terraform](https://developer.hashicorp.com/terraform/install)
 - [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli-linux?view=azure-cli-latest&pivots=apt)
+- [Google Cloud SDK](https://cloud.google.com/sdk/docs/install)
+ - Active Azure and/or GCP account with billing enabled
 
-- [Terraform](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
+ ---
+ ## Quick Start
 
-# Resources
+ 1. Clone the repository:
+	 ```bash
+	 git clone https://github.com/vincentwun/cloud-wireguard-vpn.git
+	 cd cloud-wireguard-vpn
+	 ```
+ 2. Select your cloud provider:
+	 ```bash
+	 # Azure
+	 cd azure
 
-- [Google Cloud Free Tier](https://cloud.google.com/free/docs/free-cloud-features?hl=en#compute)
+	 # GCP
+	 cd gcp
+	 ```
+ 3. Deploy infrastructure:
+	 ```bash
+	 terraform init
+	 terraform plan -out=tfplan
+	 terraform apply tfplan
+	 ```
+ 4. Retrieve generated client configurations:
+	 ```bash
+	 ls client-configs/
+	 ```
 
-- [Azure Free Account](https://azure.microsoft.com/en-us/pricing/purchase-options/azure-account?icid=azurefreeaccount#freeservices)
+ ---
+ ## Cleanup
+
+ ```bash
+ terraform destroy
+ ```
