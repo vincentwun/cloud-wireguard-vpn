@@ -23,7 +23,7 @@
 	 ```
  2. Install required tools
 	 ```bash
-		./install.sh
+	./install.sh
 	 ```
  3. Select your cloud provider:
 	 ```bash
