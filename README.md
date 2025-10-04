@@ -21,7 +21,11 @@
 	 git clone https://github.com/vincentwun/cloud-wireguard-vpn.git
 	 cd cloud-wireguard-vpn
 	 ```
- 2. Select your cloud provider:
+ 2. Install required tools
+	 ```bash
+		./install.sh
+	 ```
+ 3. Select your cloud provider:
 	 ```bash
 	 # Azure
 	 cd azure
@@ -29,13 +33,13 @@
 	 # GCP
 	 cd gcp
 	 ```
- 3. Deploy infrastructure:
+ 4. Deploy infrastructure:
 	 ```bash
 	 terraform init
 	 terraform plan -out=tfplan
 	 terraform apply tfplan
 	 ```
- 4. Retrieve generated client configurations:
+ 5. Retrieve generated client configurations:
 	 ```bash
 	 ls client-configs/
 	 ```
